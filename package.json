@@ -1,0 +1,11 @@
+{
+  "name": "plotly-nwjs",
+  "version": "1.0.0",
+  "description": "trial of plotly with nwjs",
+  "main": "index.html",
+  "scripts": {
+    "test": "test"
+  },
+  "author": "Yosuke Yasuda",
+  "license": "MIT"
+}

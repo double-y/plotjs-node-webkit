@@ -1,0 +1,19 @@
+{
+  "name": "plotly-nwjs",
+  "description": "trial of plotly with nwjs",
+  "main": "index.js",
+  "authors": [
+    "Yosuke Yasuda"
+  ],
+  "license": "MIT",
+  "moduleType": [],
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
