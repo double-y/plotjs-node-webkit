@@ -17,7 +17,13 @@ gulp.task('stylus', function() {
 });
 
 gulp.task('react-build', function() {
-  gulp.src('').pipe(shell(['webpack']));
+  return gulp.src('').pipe(shell(['webpack']));
 });
 
-gulp.task('build', ['coffee', 'stylus', 'react-build']);
+gulp.task('nwjs', function() {
+  return gulp.src('').pipe(shell(['nwjs .']));
+});
+
+gulp.task('build', ['coffee', 'stylus', 'react-build'], function(done){
+  gulp.start('nwjs');
+});
