@@ -14,10 +14,10 @@ module.exports = {
     module: {
         loaders: [
             {
-                loader: 'babel-loader',
+                loader: 'babel',
                 test: path.join(__dirname, 'src/jsx'),
                 query: {
-                  presets: 'react',
+                  presets: ['react', 'es2015']
                 },
             }
         ]

@@ -43,16 +43,45 @@ var SampleChart = React.createClass({
         Plotly.plot( dom, [data], layout);
     },
     render: function(){
-        var self = this;
-        return (<div ref={function(dom){self.bindChart(dom);}} style={{width:"600px", height:"250px"}}></div>)
+        return (
+            <div
+                ref={(dom) => {if(dom){this.bindChart(dom);}}}
+                style={{width:"600px", height:"250px"}}
+                class="chart-container">
+
+            </div>)
     }
 });
 
 var DataNavigator = React.createClass({
+    bindXDataChangeListener: function(dom){
+       dom.addEventListener('change', (event) => {
+           this.props.setDataState({xDataLabel: this.value})
+       });
+   },
    render: function(){
+       var xOptions = this.props.fields.map((current, i) => {
+           return (<option value={current.name} key={"xField" + i}>{current.name}</option>)
+       });
+
+       var yOptions = this.props.fields.map(function(current, i){
+           return (<option value={current.name} key={"yField" + i}>{current.name}</option>)
+       });
+
        return (
            <div>
-               <input type='file'/>
+               <label>x data</label>
+               <select ref={(dom) => {
+               if(dom){
+                    this.bindXDataChangeListener(dom);
+                    }
+               }}>
+                   {xOptions}
+               </select>
+               <label>y data</label>
+               <select>
+                   {yOptions}
+               </select>
            </div>
        )
    }
@@ -60,9 +89,9 @@ var DataNavigator = React.createClass({
 
 var DataImporter = React.createClass({
     inputBind: function(dom){
-        var self = this;
-        if( dom!= null ) dom.addEventListener('change', function(event){
-            var dataFileManager = new DBFDataFileParser(this.value);
+        if( dom!= null ) dom.addEventListener('change', (event) => {
+            console.log(dom);
+            var dataFileManager = new DBFDataFileParser(dom.value);
             var fields = [];
             var records = [];
 
@@ -74,8 +103,13 @@ var DataImporter = React.createClass({
                 records.push(record);
             });
 
-            dataFileManager.dbpParser.on('end', function(p){
-                self.props.setData({data:records, xDataLabel:fields[68].name,  yDataLabel:fields[12].name});
+            dataFileManager.dbpParser.on('end', (p) => {
+                this.props.setData({
+                    data:records,
+                    fields: fields,
+                    xDataLabel:fields[68].name,
+                    yDataLabel:fields[12].name
+                });
             });
 
             dataFileManager.dbpParser.parse();
@@ -86,7 +120,7 @@ var DataImporter = React.createClass({
         var self = this;
         return(
             <div>
-                <input ref={function(dom){self.inputBind(dom)}} type='file'/>
+                <input ref={function(dom){if(dom) self.inputBind(dom);}} type='file'/>
             </div>
         )
     }
@@ -96,6 +130,7 @@ var DataContainer = React.createClass({
     getInitialState: function(){
       return {
           data:[],
+          fields:[],
           xDataLabel: '',
           yDataLabel: ''
       }
@@ -109,18 +144,16 @@ var DataContainer = React.createClass({
     render: function(){
         var self = this;
         if(this.state.data.length > 0){
-            xData = this.state.data.map(function(obj){
+            var xData = this.state.data.map(function(obj){
                 var originalValue =  obj[self.state.xDataLabel];
                 var intValue = parseInt(originalValue);
-                console.log("x");
-                console.log(originalValue);
                 if(intValue != NaN){
                     return intValue;
                 }else{
                     return originalValue;
                 }
             });
-            yData = this.state.data.map(function(obj){
+            var yData = this.state.data.map(function(obj){
                 var originalValue =  obj[self.state.yDataLabel];
                 var intValue = parseInt(originalValue);
                 if(intValue != NaN){
@@ -131,7 +164,7 @@ var DataContainer = React.createClass({
             });
             return(
                 <div>
-                    <DataNavigator/>
+                    <DataNavigator fields={this.state.fields} setDataState={this.setData}/>
                     <SampleChart xData={xData} xLabel={self.state.xDataLabel} yData={yData} yLabel={self.state.yDataLabel}/>
                 </div>
             )
