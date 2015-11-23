@@ -4,8 +4,27 @@
 var React = require('react');
 var ReactDom = require('react-dom');
 
-var SampleChart = React.createClass({
-    bindChart: function(dom){
+var ChartContainer = React.createClass({
+    getInitialState: function(){
+      return {
+          data: [],
+          xLabel: '',
+          yLabel: '',
+      }
+    },
+    getDataArray(key){
+        return this.state.data.map((obj) => {
+            var originalValue =  obj[key];
+            var intValue = parseInt(originalValue);
+            if(intValue != NaN){
+                return intValue;
+            }else{
+                return originalValue;
+            }
+        });
+    },
+    updateChart: function(newState){
+        var dom = this.refs.chart_dom;
         var data = {
             type: 'scatter',
             marker: {         // marker is an object, valid marker keys: #scatter-marker
@@ -16,17 +35,17 @@ var SampleChart = React.createClass({
                 width: 0
             },
             mode: 'markers',
-            x: this.props.xData,
-            y: this.props.yData,
+            x: this.getDataArray(newState.xLabel),
+            y: this.getDataArray(newState.yLabel),
         };
 
         var layout = {                     // all "layout" attributes: #layout
             title: 'simple example',  // more about "layout.title": #layout-title
             xaxis: {                  // all "layout.xaxis" attributes: #layout-xaxis
-                title: this.props.xLabel         // more about "layout.xaxis.title": #layout-xaxis-title
+                title: newState.xLabel         // more about "layout.xaxis.title": #layout-xaxis-title
             },
             yaxis: {
-                title: this.props.yLabel
+                title: newState.yLabel
             },
             /*annotations: [            // all "annotation" attributes: #layout-annotations
                 {
@@ -39,47 +58,95 @@ var SampleChart = React.createClass({
             ],*/
             margin: { t: 0 }
         }
-
-        Plotly.plot( dom, [data], layout);
+        console.log(dom.data);
+        dom.data = [data];
+        Plotly.redraw(dom);
+    },
+    componentDidMount: function(){
+        var data = {
+            type: 'scatter',
+            marker: {         // marker is an object, valid marker keys: #scatter-marker
+                color: 'rgb(16, 32, 77)', // more about "marker.color": #scatter-marker-color
+                size: 1
+            },
+            line: {
+                width: 0
+            },
+            mode: 'markers',
+            x: [],
+            y: [],
+        };
+        var layout = {                     // all "layout" attributes: #layout
+            title: 'simple example',  // more about "layout.title": #layout-title
+            xaxis: {                  // all "layout.xaxis" attributes: #layout-xaxis
+                title: "x title"         // more about "layout.xaxis.title": #layout-xaxis-title
+            },
+            yaxis: {
+                title: "y title"
+            },
+            /*annotations: [            // all "annotation" attributes: #layout-annotations
+             {
+             text: 'simple annotation',    // #layout-annotations-text
+             x: 0,                         // #layout-annotations-x
+             xref: 'paper',                // #layout-annotations-xref
+             y: 0,                         // #layout-annotations-y
+             yref: 'paper'                 // #layout-annotations-yref
+             }
+             ],*/
+            margin: { t: 0 }
+        }
+        Plotly.plot(this.refs.chart_dom, [], layout);
+    },
+    shouldComponentUpdate: function(nextProps, nextState) {
+        this.updateChart(nextState);
+        return false;
     },
     render: function(){
         return (
             <div
-                ref={(dom) => {if(dom){this.bindChart(dom);}}}
-                style={{width:"600px", height:"250px"}}
-                class="chart-container">
-
+                ref="chart_dom"
+                style={{width:"600px", height:"250px"}}>
             </div>)
     }
 });
 
 var DataNavigator = React.createClass({
+    getInitialState: function(){
+        return {
+            fields: []
+        }
+    },
     bindXDataChangeListener: function(dom){
        dom.addEventListener('change', (event) => {
-           this.props.setDataState({xDataLabel: this.value})
+           this.props.changeChartState({xLabel: dom.value})
        });
-   },
+    },
+    componentDidMount: function(){
+        this.refs.x_select.addEventListener('change', (event) => {
+            console.log(this.refs.x_select.value);
+            this.props.changeChartState({xLabel: this.refs.x_select.value})
+        });
+        this.refs.y_select.addEventListener('change', (event) => {
+            this.props.changeChartState({yLabel: this.refs.y_select.value})
+        });
+    },
    render: function(){
-       var xOptions = this.props.fields.map((current, i) => {
-           return (<option value={current.name} key={"xField" + i}>{current.name}</option>)
+       var xOptions = this.state.fields.map((current, i) => {
+           return (<option value={current.name} key={"xField" + i}>{current}</option>)
        });
 
-       var yOptions = this.props.fields.map(function(current, i){
-           return (<option value={current.name} key={"yField" + i}>{current.name}</option>)
+       var yOptions = this.state.fields.map(function(current, i){
+           return (<option value={current.name} key={"yField" + i}>{current}</option>)
        });
 
        return (
            <div>
                <label>x data</label>
-               <select ref={(dom) => {
-               if(dom){
-                    this.bindXDataChangeListener(dom);
-                    }
-               }}>
+               <select ref="x_select">
                    {xOptions}
                </select>
                <label>y data</label>
-               <select>
+               <select ref="y_select">
                    {yOptions}
                </select>
            </div>
@@ -90,7 +157,6 @@ var DataNavigator = React.createClass({
 var DataImporter = React.createClass({
     inputBind: function(dom){
         if( dom!= null ) dom.addEventListener('change', (event) => {
-            console.log(dom);
             var dataFileManager = new DBFDataFileParser(dom.value);
             var fields = [];
             var records = [];
@@ -104,12 +170,10 @@ var DataImporter = React.createClass({
             });
 
             dataFileManager.dbpParser.on('end', (p) => {
-                this.props.setData({
-                    data:records,
-                    fields: fields,
-                    xDataLabel:fields[68].name,
-                    yDataLabel:fields[12].name
+                var field_name_list = fields.map((field)=> {
+                    return field.name;
                 });
+                this.props.changeDataSet(records, field_name_list);
             });
 
             dataFileManager.dbpParser.parse();
@@ -127,52 +191,21 @@ var DataImporter = React.createClass({
 });
 
 var DataContainer = React.createClass({
-    getInitialState: function(){
-      return {
-          data:[],
-          fields:[],
-          xDataLabel: '',
-          yDataLabel: ''
-      }
+    changeDataSet: function(data_array, field_name_list){
+        this.refs.chart_container.setState({data: data_array});
+        this.refs.data_navigator.setState({fields: field_name_list});
     },
-    setData: function(json){
-
-        // Todo: json validation
-
-        this.setState(json);
+    changeChartState: function(json){
+        this.refs.chart_container.setState(json);
     },
     render: function(){
-        var self = this;
-        if(this.state.data.length > 0){
-            var xData = this.state.data.map(function(obj){
-                var originalValue =  obj[self.state.xDataLabel];
-                var intValue = parseInt(originalValue);
-                if(intValue != NaN){
-                    return intValue;
-                }else{
-                    return originalValue;
-                }
-            });
-            var yData = this.state.data.map(function(obj){
-                var originalValue =  obj[self.state.yDataLabel];
-                var intValue = parseInt(originalValue);
-                if(intValue != NaN){
-                    return intValue;
-                }else{
-                    return originalValue;
-                }
-            });
-            return(
-                <div>
-                    <DataNavigator fields={this.state.fields} setDataState={this.setData}/>
-                    <SampleChart xData={xData} xLabel={self.state.xDataLabel} yData={yData} yLabel={self.state.yDataLabel}/>
-                </div>
-            )
-        }else{
-            return(
-                <DataImporter setData={this.setData}/>
-            )
-        }
+        return(
+            <div>
+                <DataNavigator ref="data_navigator" changeDataSet={this.changeDataSet} changeChartState={this.changeChartState}/>
+                <ChartContainer ref="chart_container" />
+                <DataImporter ref="data_importer" changeDataSet={this.changeDataSet}/>
+            </div>
+        )
     }
 });
 
