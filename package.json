@@ -24,6 +24,19 @@
     "webpack": "^1.12.6",
     "webpack-dev-server": "^1.12.1"
   },
+  "window": {
+    "title": "plotly nwjs",
+    "icon": "",
+    "toolbar": true,
+    "frame": false,
+    "width": 1200,
+    "height": 800,
+    "position": "mouse",
+    "min_width": 1200,
+    "min_height": 800,
+    "max_width": 1200,
+    "max_height": 800
+  },
   "scripts": {
     "test": "./node_modules/mocha/bin/mocha src/tests/**/*.test.js --require src/tests/chai-config.js"
   },

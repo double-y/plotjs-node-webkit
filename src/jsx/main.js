@@ -47,20 +47,11 @@ var ChartContainer = React.createClass({
             yaxis: {
                 title: newState.yLabel
             },
-            /*annotations: [            // all "annotation" attributes: #layout-annotations
-                {
-                    text: 'simple annotation',    // #layout-annotations-text
-                    x: 0,                         // #layout-annotations-x
-                    xref: 'paper',                // #layout-annotations-xref
-                    y: 0,                         // #layout-annotations-y
-                    yref: 'paper'                 // #layout-annotations-yref
-                }
-            ],*/
             margin: { t: 0 }
         }
-        console.log(dom.data);
         dom.data = [data];
         Plotly.redraw(dom);
+        Plotly.relayout(dom, layout);
     },
     componentDidMount: function(){
         var data = {
@@ -105,7 +96,7 @@ var ChartContainer = React.createClass({
         return (
             <div
                 ref="chart_dom"
-                style={{width:"600px", height:"250px"}}>
+                style={{width:"100%", height:"500px"}}>
             </div>)
     }
 });
@@ -201,8 +192,8 @@ var DataContainer = React.createClass({
     render: function(){
         return(
             <div>
-                <DataNavigator ref="data_navigator" changeDataSet={this.changeDataSet} changeChartState={this.changeChartState}/>
                 <ChartContainer ref="chart_container" />
+                <DataNavigator ref="data_navigator" changeDataSet={this.changeDataSet} changeChartState={this.changeChartState}/>
                 <DataImporter ref="data_importer" changeDataSet={this.changeDataSet}/>
             </div>
         )
