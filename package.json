@@ -28,7 +28,7 @@
     "title": "plotly nwjs",
     "icon": "",
     "toolbar": true,
-    "frame": false,
+    "frame": true,
     "width": 1200,
     "height": 800,
     "position": "mouse",

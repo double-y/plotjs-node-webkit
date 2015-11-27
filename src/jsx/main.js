@@ -4,6 +4,49 @@
 var React = require('react');
 var ReactDom = require('react-dom');
 
+var HistoGramListViewer = React.createClass({
+    getInitialState: function(){
+        return {
+            fields: [],
+            data: [],
+        }
+    },
+    componentDidMount: function(){
+        this.refs.hist_container;
+    },
+    render: function(){
+        var _this = this;
+        var histograms = this.state.fields.map(function(field, index){
+            var data = _this.state.data.map(function(data, data_index){
+                return data[field];
+            });
+            return (<HistoGram data={data} title={field} key={"histogram"+index}></HistoGram>)
+        });
+        return (<ul ref="hist_container">{histograms}</ul>)
+    }
+});
+
+var HistoGram = React.createClass({
+    getInitialState: function(){
+        return {
+            data: []
+        }
+    },
+    componentDidMount: function(){
+        var data=[{
+            x: this.props.data,
+            type: 'histogram'
+        }];
+        var layout={
+            title: this.props.title
+        };
+        Plotly.newPlot(this.refs.hist_container, data, layout);
+    },
+    render: function(){
+        return (<li><div ref="hist_container"></div></li>)
+    }
+});
+
 var ChartContainer = React.createClass({
     getInitialState: function(){
       return {
@@ -114,7 +157,6 @@ var DataNavigator = React.createClass({
     },
     componentDidMount: function(){
         this.refs.x_select.addEventListener('change', (event) => {
-            console.log(this.refs.x_select.value);
             this.props.changeChartState({xLabel: this.refs.x_select.value})
         });
         this.refs.y_select.addEventListener('change', (event) => {
@@ -183,8 +225,8 @@ var DataImporter = React.createClass({
 
 var DataContainer = React.createClass({
     changeDataSet: function(data_array, field_name_list){
-        this.refs.chart_container.setState({data: data_array});
-        this.refs.data_navigator.setState({fields: field_name_list});
+        this.refs.hist_gram_list.setState({data: data_array});
+        this.refs.hist_gram_list.setState({fields: field_name_list});
     },
     changeChartState: function(json){
         this.refs.chart_container.setState(json);
@@ -192,7 +234,7 @@ var DataContainer = React.createClass({
     render: function(){
         return(
             <div>
-                <ChartContainer ref="chart_container" />
+                <HistoGramListViewer ref="hist_gram_list"/>
                 <DataNavigator ref="data_navigator" changeDataSet={this.changeDataSet} changeChartState={this.changeChartState}/>
                 <DataImporter ref="data_importer" changeDataSet={this.changeDataSet}/>
             </div>
